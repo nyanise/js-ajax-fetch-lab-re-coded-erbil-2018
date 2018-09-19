@@ -1,46 +1,83 @@
+\const userName = ''
+const baseApi = 'https://api.github.com/'
+const fork = `${userName}/javascript-fetch-lab`
 
-<!DOCTYPE html>
-<html>
-  <head>
-    <title>JavaScript fetch() Lab</title>
-    <script src="https://code.jquery.com/jquery-3.2.1.min.js"
-    integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
-    crossorigin="anonymous"></script>
-    <style>
-      .flexbox-container {
-        display: -ms-flex;
-        display: -webkit-flex;
-        display: flex;
-      }
-      .flexbox-container > div {
-        width: 50%;
-        padding: 10px;
-      }
-      .flexbox-container > div:first-child {
-        margin-right: 20px;
-      }
-    </style>
-  </head>
-  <body>
-    <main id="main">
-      <div id="errors"></div>
-    </main>
-    <div class="flexbox-container">
-      <div>
-        <h3>Create Fork</h3>
-        <p><a href="#" onclick="forkRepo()">Fork Repository</a></p>
-        <div id="results"></div>
-      </div>
-      <div>
-        <h3>Issues</h3>
-        <div>
-          Issue Title: <input type="text" id="title"><br>
-          Issue Text: <input type="text" id="body"><br>
-          <a href="#" id="search" onclick="createIssue()">Create Issue</a>
-        </div>
-        <div id="issues"></div>
-      </div>
-    </div>
-    <script src="index.js"></script>
-  </body>
-</html>
+//Issue and Repo objects and templates
+
+function Issue(attributes){
+  this.title = attributes.title;
+  this.body = attributes.body;
+  this.url = attributes.url;
+}
+
+function Repo(attributes){
+  this.url = attributes.url;
+}
+
+Issue.prototype.template = function(){
+   var template = `<li>Title: <a href="${this.url}">${this.title} </a><span> | Body: ${this.body}</span></li>`
+   return template;
+};
+
+Repo.prototype.template = function(){
+  var template = `<h3>Forked Successfully!</h3><a href="${this.url}"> ${this.url}</a>`
+  return template;
+};
+
+//Create an issue through the Github API
+
+function createIssue() {
+  const issueTitle = document.getElementById('title').value
+  const issueBody = document.getElementById('body').value
+  const postData = { title: issueTitle, body: issueBody }
+  fetch(`${baseApi}repos/${fork}/issues`, {
+    method: 'post',
+    headers: {
+      'Authorization': `token ${getToken()}`
+    },
+    body: JSON.stringify(postData)
+  }).then(resp => getIssues())
+}
+
+//Fetch all issues through the Github API and display / append to the DOM
+
+function getIssues(data) {
+  fetch(`${baseApi}repos/${fork}/issues`).
+    then(resp => {
+      resp.json().then( data => {
+        for (let i = 0; i < data.length; i++){
+          displayIssue(new Issue(data[i]));
+        }
+      } )
+    })
+}
+
+function displayIssue(issue) {
+  $('#issues').append(issue.template())
+}
+
+//Fetch and show repo info
+
+
+function forkRepo() {
+  const repo = 'learn-co-curriculum/javascript-fetch-lab'
+
+  fetch(`${baseApi}repos/${repo}/forks`, {
+    method: 'post',
+    headers: {
+      'Authorization': `token ${getToken()}`
+    }
+  }).then(resp => {
+    let repo = new Repo(resp);
+    showForkedRepo(repo);
+  })
+}
+
+function showForkedRepo(repo) {
+  $('#results').append(repo.template())
+}
+
+
+function getToken() {
+  return ''
+}
